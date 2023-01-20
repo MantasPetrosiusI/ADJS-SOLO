@@ -1,38 +1,16 @@
 const url = "https://striveschool-api.herokuapp.com/api/movies/";
-const headers = new Headers({
-  "Content-Type": "application/json",
-  Authorization:
-    "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.      eyJfaWQiOiI2M2NhNzJhZTE3ZWE3ODAwMTUyZWJlYzYiLCJpYXQiOjE2NzQyMTIwMTUsImV4cCI6MTY3NTQyMTYxNX0.LERePH0JOsaosvGJRMd7NCvZx1LgcX-Cl0Jq9PSr5DE",
-  "Content-Type": "application/json",
-});
 const par = new URLSearchParams(location.search);
 const id = par.get("id");
 
-window.onload = async () => {
-  try {
-    let response = await fetch(`${url}/${id}`, {
-      headers,
-    });
+const headers = new Headers({
+  "Content-Type": "application/json",
+  Authorization:
+    "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2M2NhNzJhZTE3ZWE3ODAwMTUyZWJlYzYiLCJpYXQiOjE2NzQyMjMyOTgsImV4cCI6MTY3NTQzMjg5OH0.OQcthGhLshWhIJnXJ8R-bg6Y8-vRGx6ce3krVyBp8jI",
+  "Content-Type": "application/json",
+});
 
-    if (response.ok) {
-      let { name, description, category, imageUrl } = await response.json();
-      console.log("Successful");
-      document.querySelector("#movie-name").value = name;
-      document.querySelector("#description").value = description;
-      document.querySelector("#category").value = category;
-      document.querySelector("#image-url").value = imageUrl;
-    } else {
-      console.error(response);
-    }
-    showMovie();
-  } catch (error) {
-    console.error(error);
-  }
-};
-
-const addMovie = async (addMovie) => {
+const addMovie = async () => {
   try {
-    addMovie.preventDefault();
     const newMovie = {
       name: document.querySelector("#movie-name").value,
       description: document.querySelector("#description").value,
@@ -59,16 +37,33 @@ const addMovie = async (addMovie) => {
   }
 };
 
+window.onload = async () => {
+  await showMovie();
+};
+
+const getCategory = async () => {
+  try {
+    allMovieArray = {};
+    const response = await fetch(url, { headers });
+    const moviesData = await response.json();
+    allMovieArray.push(moviesData);
+    console.log(allMovieArray);
+    renderMovies(allMovieArray);
+    console.log(moviesData);
+  } catch (error) {
+    console.error(error);
+  }
+};
 const showMovie = async () => {
   try {
     const response = await fetch(url, { headers });
     const moviesData = await response.json();
     renderMovies(moviesData);
+    console.log(moviesData);
   } catch (error) {
     console.error(error);
   }
 };
-
 const editMovie = async (editMovie) => {
   try {
     editMovie.preventDefault();
@@ -79,7 +74,7 @@ const editMovie = async (editMovie) => {
       imageUrl: document.querySelector("#image-url").value,
     };
 
-    const response = await fetch(`${url}/${id}`, {
+    const response = await fetch(url + id, {
       method: "PUT",
       body: JSON.stringify(edit),
       headers,
@@ -87,24 +82,44 @@ const editMovie = async (editMovie) => {
 
     if (response.ok) {
       console.log("Success");
-    } else {
-      console.error("Error");
+      showMovie();
+      document.querySelector("#movie-name").value = "";
+      document.querySelector("#description").value = "";
+      document.querySelector("#category").value = "";
+      document.querySelector("#image-url").value = "";
     }
   } catch (error) {
     console.error(error);
   }
 };
-const newMovieRow = document.querySelector("#new-movie");
+const deleteMovie = async (movieId) => {
+  try {
+    let res = await fetch(url + movieId, { method: "DELETE", headers });
+    console.log(res);
+    if (res.ok) {
+      await showMovie();
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+const newMovieRow = document.querySelector("#new-movies");
+
 const renderMovies = (movieArray) => {
-  movieArray.innerHTML = "";
-  const allNewMovies = movieArray
-    // name, description, brand, imageUrl, price
-    .map(({ imageUrl }) => {
-      return `
-                 <div class="col-md-2">
-                    <img class="movie-cover" src="${imageUrl}"/>
-                  </div>`;
-    })
-    .join("");
-  newMovieRow.innerHTML = allNewMovies;
+  const row = document.querySelector("#new-movies");
+  row.innerHTML = "";
+  movieArray.forEach((singleMovie) => {
+    const { name, description, category, imageUrl, _id } = singleMovie;
+    row.innerHTML += `<div class="col">
+    <div class="card" style="width: 13em;">
+       <img src="${imageUrl}" class="card-img-top" alt="...">
+       <div class="card-body">
+         <h5 class="card-title">${name}</h5>
+         <p class="card-text">${description}</p>
+         <p class="card-text">${category}</p>
+         <a href='./backoffice.html?id=${_id}' class='btn btn-primary rounded-pill m-1 '> Edit</a>
+         <a class='btn btn-info rounded-pill m-1' onclick='deleteMovie("${_id}")'> Delete </a>
+       </div>
+     </div></div>`;
+  });
 };
