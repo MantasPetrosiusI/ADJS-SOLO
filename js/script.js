@@ -41,22 +41,9 @@ window.onload = async () => {
   await showMovie();
 };
 
-const getCategory = async () => {
-  try {
-    allMovieArray = {};
-    const response = await fetch(url, { headers });
-    const moviesData = await response.json();
-    allMovieArray.push(moviesData);
-    console.log(allMovieArray);
-    renderMovies(allMovieArray);
-    console.log(moviesData);
-  } catch (error) {
-    console.error(error);
-  }
-};
 const showMovie = async () => {
   try {
-    const response = await fetch(url, { headers });
+    const response = await fetch(url + "comedy", { headers });
     const moviesData = await response.json();
     renderMovies(moviesData);
     console.log(moviesData);
